@@ -4,68 +4,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mine</title>
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-    <script src="https://unpkg.com/vue/dist/vue.js"></script>
-    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>Lines | Play online</title>
+    <link rel="stylesheet" href="//unpkg.com/element-plus/dist/index.css" />
+    <script src="//unpkg.com/vue@3"></script>
+    <script src="//unpkg.com/element-plus"></script>
 </head>
 
 <body>
     <div id="game">
-        <div class="controls">
-            <div>
-                <label for="width">Width</label>
-                <el-slider v-model="config.width" :min="10" :max="25" :step="1">
-                </el-slider>
+        <el-button @click="drawer = true" type="info">Config
+            <el-icon :size="20">
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" data-v-ea893728="">
+                    <path fill="currentColor" d="M600.704 64a32 32 0 0 1 30.464 22.208l35.2 109.376c14.784 7.232 28.928 15.36 42.432 24.512l112.384-24.192a32 32 0 0 1 34.432 15.36L944.32 364.8a32 32 0 0 1-4.032 37.504l-77.12 85.12a357.12 357.12 0 0 1 0 49.024l77.12 85.248a32 32 0 0 1 4.032 37.504l-88.704 153.6a32 32 0 0 1-34.432 15.296L708.8 803.904c-13.44 9.088-27.648 17.28-42.368 24.512l-35.264 109.376A32 32 0 0 1 600.704 960H423.296a32 32 0 0 1-30.464-22.208L357.696 828.48a351.616 351.616 0 0 1-42.56-24.64l-112.32 24.256a32 32 0 0 1-34.432-15.36L79.68 659.2a32 32 0 0 1 4.032-37.504l77.12-85.248a357.12 357.12 0 0 1 0-48.896l-77.12-85.248A32 32 0 0 1 79.68 364.8l88.704-153.6a32 32 0 0 1 34.432-15.296l112.32 24.256c13.568-9.152 27.776-17.408 42.56-24.64l35.2-109.312A32 32 0 0 1 423.232 64H600.64zm-23.424 64H446.72l-36.352 113.088-24.512 11.968a294.113 294.113 0 0 0-34.816 20.096l-22.656 15.36-116.224-25.088-65.28 113.152 79.68 88.192-1.92 27.136a293.12 293.12 0 0 0 0 40.192l1.92 27.136-79.808 88.192 65.344 113.152 116.224-25.024 22.656 15.296a294.113 294.113 0 0 0 34.816 20.096l24.512 11.968L446.72 896h130.688l36.48-113.152 24.448-11.904a288.282 288.282 0 0 0 34.752-20.096l22.592-15.296 116.288 25.024 65.28-113.152-79.744-88.192 1.92-27.136a293.12 293.12 0 0 0 0-40.256l-1.92-27.136 79.808-88.128-65.344-113.152-116.288 24.96-22.592-15.232a287.616 287.616 0 0 0-34.752-20.096l-24.448-11.904L577.344 128zM512 320a192 192 0 1 1 0 384 192 192 0 0 1 0-384zm0 64a128 128 0 1 0 0 256 128 128 0 0 0 0-256z"></path>
+                </svg>
+            </el-icon>
+        </el-button>
+        <el-divider></el-divider>
+        <div class="toolbar">
+            <div class="score">
+                <h3>{{bonus}}</h3>
             </div>
-            <div>
-                <label for="height">Height</label>
-                <el-slider v-model="config.height" :min="10" :max="25" :step="1">
+            <div class="nextballs" @click="setBalls">
+                <span :class="'ball c'+ball.color" v-for="ball in next"></span>
             </div>
-            <div>
-                <label for="bombs">Bombs</label>
-                <el-slider :min="10" :max="Math.round(config.width * config.height/2)" v-model="config.bombs" :step="1">
-                    <input type="number">
-            </div>
-            <div>
-                <i class="el-icon-s-flag"></i>Bombs left: {{ mines.length - flags.length}}
-            </div>
-            <el-divider></el-divider>
-            <div>
-                <el-button type="primary" @click="build">Restart game</el-button>
-            </div>
-            <div class="debug">
-                <!-- {{mines}} -->
-                <!-- {{open}} -->
-                <!-- {{flags}} -->
-                <!-- <br>{{matrix}} -->
-            </div>
-            <hr>
         </div>
-        <div class="field" :class="{ over: finished }">
+        <div class="field" :class="{ over: finished, onselect: selected }">
             <div v-for=" row, y in matrix" v-if="matrix.length > 0" class="row">
-                <span v-for="cell, x in row" :class="getClass(x+1, y+1)" @click="click(x+1, y+1)" @contextmenu.prevent="flag(x+1, y+1)">
+                <span v-for="cell, x in row" class="cell" @click="click(x+1, y+1)">
+                    <sub v-if="config.debug" style="position: absolute;">{{getCellPosition(x+1, y+1)}}</sub>
+                    <span :class="getClass(x+1, y+1)">
+                    </span>
                 </span>
             </div>
-            <div :class="{overlay: true, success: win}"></div>
         </div>
+        <el-divider></el-divider>
+        <div>
+            <el-button type="warning" @click="build">Restart game</el-button>
+        </div>
+
+        <el-drawer title="Configuration" v-model="drawer" direction="rtl" size="40%" :modal="false">
+            <div class="controls">
+                <div>
+                    <label for="width">Width</label>
+                    <el-slider v-model="config.width" :show-tooltip="false" :show-input="true" :min="4" :max="14" :step="1">
+                    </el-slider>
+                </div>
+                <div>
+                    <label for="height">Height</label>
+                    <el-slider v-model="config.height" :show-tooltip="false" :show-input="true" :min="4" :max="14" :step="1">
+                </div>
+                <div>
+                    <label for="height">Colors</label>
+                    <el-slider v-model="config.colors" :show-tooltip="false" :show-input="true" :min="3" :max="8" :step="1">
+                </div>
+                <div>
+                    <label for="height">Balls in line to destroy</label>
+                    <el-slider v-model="config.destroyline" :show-tooltip="false" :show-input="true" :min="3" :max="7" :step="1">
+                </div>
+                <div>
+                    <label for="height">New balls per move</label>
+                    <el-slider v-model="config.dispense" :show-tooltip="false" :show-input="true" :min="2" :max="5" :step="1">
+                </div>
+                <el-divider></el-divider>
+                <el-checkbox v-model="config.teleport">Teleport</el-checkbox>
+                <br>
+                <el-checkbox v-model="config.hint">Show hint</el-checkbox>
+                <br>
+                <el-checkbox v-model="config.debug">Debug</el-checkbox>
+
+            </div>
     </div>
 </body>
 <script>
-    new Vue({
-        el: '#game',
+
+    const App = ({
         data() {
             return {
                 config: {
-                    width: 12,
-                    height: 12,
-                    bombs: 10,
+                    basebonus: 10,
+                    debug: false,
+                    width: 8,
+                    height: 8,
+                    colors: 5,
+                    dispense: 3, //how many ball will be added per move
+                    teleport: false,
+                    destroyline: 5, //how many balls need per line to destroy,
+                    hint: true,
                 },
-                finished: false,
-                mines: [],
-                flags: [],
-                open: [],
-                matrix: []
+                drawer: false,
+                next: [], //store next balls hint
+                bonus: 0, //score
+                selected: false, //current selected cell
+                finished: false, //gave over
+                matrix: [], //storage
+                possibleMoves: [], //array of possible moves
+                debounce: null, //not used yet
             }
         },
         watch: {
@@ -73,47 +106,44 @@
                 deep: true,
                 handler() {
                     this.build();
+                    // if (this.debounce) return true;
+                    // this.debounce = (() => {
+                    //     this.debounce = null;
+                    // }, 300)
                 }
             },
-            flags: {
-                deep: true,
-                handler() {
-
+            selected() {
+                this.possibleMoves = [];
+                if (this.selected) {
+                    this.setPossibleMoves(this.selected);
                 }
+                console.log('possible moves:' + this.possibleMoves.length);
             }
         },
         computed: {
             win() {
-                if (this.mines.length == this.flags.length) {
-                    let equals = true;
-                    this.flags.map(f => {
-                        if (this.flags.indexOf(f) < 0) equals = false; //not all flags are correct
-                    });
-                    return equals;
-                }
                 return false;
-            }
+            },
+
         },
         created() {
-            window['Mine'] = this;
+            window['Lines'] = this;
             this.build();
         },
         methods: {
             build() {
-                this.open = [];
-                this.mines = [];
-                this.flags = [];
-                if (this.config.width < 10) {
-                    this.config.width = 10;
+                this.next = [];
+                if (this.config.width < 4) {
+                    this.config.width = 4;
                 }
-                if (this.config.height < 10) {
-                    this.config.height = 10;
+                if (this.config.height < 4) {
+                    this.config.height = 4;
                 }
-                if (this.config.width > 25) {
-                    this.config.width = 25;
+                if (this.config.width > 14) {
+                    this.config.width = 14;
                 }
-                if (this.config.height > 25) {
-                    this.config.height = 25;
+                if (this.config.height > 14) {
+                    this.config.height = 14;
                 }
                 newmatrix = [];
                 for (let i = 0; i < this.config.height; i++) {
@@ -125,27 +155,33 @@
                 }
 
                 this.matrix = newmatrix;
-                this.setBombs();
+                this.setBalls();
                 this.finished = false;
+                console.log('done');
             },
             getClass(x, y) { //
-                let cl = ['cell'];
+                let cl = [];
                 const coord = this.getCellPosition(x, y);
-                if (this.flags.indexOf(coord) > -1) {
-                    cl.push('flag');
+                if (coord == this.selected) {
+                    cl.push('selected');
                 }
-                if (this.open.indexOf(coord) > -1) {
-                    cl.push('open');
-                }
-                if (this.mines.indexOf(coord) > -1) {
-                    cl.push('bomb');
-                    if (this.finished == coord) {
-                        cl.push('boom');
+
+                if (this.matrix[y - 1][x - 1] > 0) {
+                    cl.push('ball');
+                    cl.push("c" + this.matrix[y - 1][x - 1]);
+                } else {
+                    if (this.config.hint) {
+                        this.next.map(n => {
+                            if (n.x == x - 1 && n.y == y - 1) {
+                                cl.push('next c' + n.color);
+                            }
+                        });
                     }
                 }
-                if (this.matrix[y - 1][x - 1] > 0) {
-                    cl.push("n" + this.matrix[y - 1][x - 1]);
+                if (this.config.debug && this.possibleMoves.indexOf(coord) > -1) {
+                    cl.push('canmove');
                 }
+
                 return cl.join(" ");
             },
             getCellPosition(x, y) { //XY coords to numeric position
@@ -153,33 +189,77 @@
                 if (y > this.config.height) return false;
                 return ((y - 1) * this.config.width) + x;
             },
-            setBombs() { // fill field with bombs
-                this.mines = [];
-                if (this.config.bombs > this.width * this.height / 2) {
-                    this.config.bombs = this.width * this.height / 2
-                }
-                for (let b = 0; b < this.config.bombs; b++) {
-                    const randomX = Math.floor(Math.random() * (this.config.width) + 1);
-                    const randomY = Math.floor(Math.random() * (this.config.height) + 1);
+            setBalls() { // fill field with new balls
 
-                    const coord = this.getCellPosition(randomX, randomY);
-
-                    if (coord && this.mines.indexOf(coord) == -1) {
-                        this.matrix[randomY - 1][randomX - 1] = -1;
-                        this.mines.push(coord);
-                    } else {
-                        b--;
+                let ballscount = this.config.dispense;
+                //check free cells
+                let freespace = this.config.height * this.config.width;
+                for (let x = 0; x < this.matrix.length; x++) {
+                    const row = this.matrix[x];
+                    for (let c = 0; c < row.length; c++) {
+                        if (this.matrix[x][c] != 0) {
+                            freespace--;
+                        }
                     }
                 }
 
-                this.mines.map(b => {
-                    n = this.getNeighborhoods(b);
-                    n.map(xy => {
-                        if (this.matrix[xy[1] - 1][xy[0] - 1] >= 0) { //if cell not contains bomb
-                            this.matrix[xy[1] - 1][xy[0] - 1]++;
+                generateBalls = (ballscount) => {
+                    let newBalls = [];
+                    let usedNumbers = [];
+                    for (let b = 0; b < ballscount; b++) {
+                        const randomX = Math.floor(Math.random() * (this.config.width) + 1);
+                        const randomY = Math.floor(Math.random() * (this.config.height) + 1);
+
+                        let color = Math.floor(Math.random() * (this.config.colors) + 1);
+                        const coord = this.getCellPosition(randomX, randomY);
+                        if (coord && this.matrix[randomY - 1][randomX - 1] == 0 && usedNumbers.indexOf(coord) == -1) {
+                            newBalls.push({
+                                color: color,
+                                coords: coord,
+                                x: randomX - 1,
+                                y: randomY - 1
+                            });
+                            usedNumbers.push(coord);
+                        } else {
+                            b--;
                         }
-                    })
+                    }
+                    return newBalls;
+                }
+
+                if (freespace == 0) {
+                    //GAME OVER
+                    this.finished = true;
+                    return false;
+                }
+                if (freespace < ballscount) {
+                    ballscount = freespace;
+                }
+                if (this.next.length == 0) { //beginning of new game
+                    this.next = generateBalls(ballscount);
+                }
+                this.next.map(b => { //put balls from next array
+                    if (this.matrix[b.y][b.x] == 0) {
+                        this.matrix[b.y][b.x] = b.color;
+                    } else { //cell is busy
+                        const other = generateBalls(1);
+                        this.matrix[other[0].y][other[0].x] = b.color;
+                    }
+
                 });
+
+                freespace -= ballscount;
+                if (freespace < ballscount) {
+                    ballscount = freespace;
+                }
+                console.log('free space:' + freespace);
+                if (freespace == 0) {
+                    //GAME OVER
+                    this.finished = true;
+                    return false;
+                }
+                this.next = generateBalls(ballscount);
+                this.destroyLines()
             },
             position2coords(position) { //numeric position to XY coords
                 let y = ~~(position / this.config.width);
@@ -194,187 +274,357 @@
                 const xy = this.position2coords(coord);
                 const X = xy[0];
                 const Y = xy[1];
+                let x = 0; //tmp position store
+                let y = 0; //tmp position store
 
-                if (X > 1) {
-                    n.push([xy[0] - 1, xy[1], 'left']); //left
-                }
-                if (X > 1 && Y > 1) {
-                    n.push([xy[0] - 1, xy[1] - 1, 'upleft']); //upleft
-                }
-                if (X > 1 && Y < this.config.height)
-                    n.push([xy[0] - 1, xy[1] + 1, 'downleft']); //downleft
+                if (X > 1) { //left
+                    x = xy[0] - 1;
+                    y = xy[1];
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'left'
+                    });
 
-                if (X < this.config.width) {
-                    n.push([xy[0] + 1, xy[1], 'right']); //right
                 }
-                if (X < this.config.width && Y < this.config.height) {
-                    n.push([xy[0] + 1, xy[1] + 1, 'downright']); //downright
+                if (X > 1 && Y > 1) { //upleft
+                    x = xy[0] - 1;
+                    y = xy[1] - 1;
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'upleft'
+                    });
                 }
-                if (X < this.config.width && Y > 1) {
-                    n.push([xy[0] + 1, xy[1] - 1, 'upright']); //upright
+                if (X > 1 && Y < this.config.height) { //downleft
+                    x = xy[0] - 1;
+                    y = xy[1] + 1;
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'downleft'
+                    });
                 }
-                if (Y > 1) {
-                    n.push([xy[0], xy[1] - 1, 'up']); //up
+
+                if (X < this.config.width) { //right
+                    x = xy[0] + 1;
+                    y = xy[1];
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'right'
+                    });
                 }
-                if (Y < this.config.height) {
-                    n.push([xy[0], xy[1] + 1, 'down']); //down
+                if (X < this.config.width && Y < this.config.height) { //downright
+                    x = xy[0] + 1;
+                    y = xy[1] + 1;
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'downright'
+                    });
+                }
+                if (X < this.config.width && Y > 1) { //upright
+                    x = xy[0] + 1;
+                    y = xy[1] - 1;
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'upright'
+                    });
+                }
+                if (Y > 1) { //up
+                    x = xy[0];
+                    y = xy[1] - 1;
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'up'
+                    });
+                }
+                if (Y < this.config.height) { //down
+                    x = xy[0];
+                    y = xy[1] + 1;
+                    n.push({
+                        x: x,
+                        y: y,
+                        color: this.matrix[y - 1][x - 1],
+                        coord: this.getCellPosition(x, y),
+                        pos: 'down'
+                    });
                 }
                 return n;
 
             },
             click(x, y) { //hangle left click
                 const coord = this.getCellPosition(x, y);
-                if (this.flags.indexOf(coord) > -1) {
-                    return false;
-                }
-                if (this.mines.indexOf(coord) > -1) {
-                    this.finished = coord;
-                    this.open = this.open.concat(this.mines);
-                }
-                if (this.open.indexOf(coord) == -1) {
-                    //if cell is not opened
-                    this.open.push(coord);
-                    num = this.matrix[y - 1][x - 1]; //how many bombs are around clicked cell
-                    if (num == 0) { //if cell is empty then open empty neighborhoods
-                        const n = this.getNeighborhoods(coord);
-                        n.map(xy => {
-                            this.click(xy[0], xy[1]);
-                        });
+                const color = this.matrix[y - 1][x - 1];
+                if (color > 0) {
+                    this.selected = coord;
+                } else if (color == 0 && this.selected) {
+                    //move
+                    if (this.possibleMoves.indexOf(coord) == -1 && !this.config.teleport) {
+                        //can't move
+                        console.log('cant');
+                        return;
+                    }
+                    const from = this.position2coords(this.selected);
+                    const movecolor = this.matrix[from[1] - 1][from[0] - 1];
+                    this.matrix[from[1] - 1][from[0] - 1] = 0;
+                    this.matrix[y - 1][x - 1] = movecolor;
+                    this.selected = false;
+                    console.log('move done');
+                    if (!this.destroyLines()) {
+                        this.setBalls();
+                        console.log('balls set');
                     }
                 }
             },
-            flag(x, y) { // set or remove Flag
-                const coord = this.getCellPosition(x, y);
+            destroyLines() {
+                //todo destroy balls
+                const starts = this.getLineStarts();
+                let destroyed = false; //flag if any line was destroyed
+                starts.map((line, i) => {
+                    if (line.balls.length >= this.config.destroyline) {
+                        // console.log('destroy ', line.balls);
+                        line.balls.map(coords => {
+                            const XY = this.position2coords(coords);
+                            this.matrix[XY[1] - 1][XY[0] - 1] = 0;
+                        });
+                        destroyed = true;
+                        let bonus = Math.round(line.balls.length / this.config.destroyline * this.config.basebonus);
+                        this.bonus += bonus;
+                    }
+                });
+                return destroyed;
+            },
+            setPossibleMoves(pos) {
+                const neib = this.getNeighborhoods(pos);
+                neib.map(cell => {
+                    // console.log(cell.pos)
+                    if (['up', 'down', 'right', 'left'].indexOf(cell.pos) > -1 && cell.color == 0 && this.possibleMoves.indexOf(cell.coord) == -1) {
+                        this.possibleMoves.push(cell.coord);
+                        this.setPossibleMoves(cell.coord);
+                    }
+                });
+            },
+            getLineStarts() {
+                let starts = [];
+                const allow = [ //possible direction from start ball
+                    'right',
+                    'down',
+                    'downright',
+                    'downleft'
+                ];
 
-                if (this.flags.indexOf(coord) == -1 && this.open.indexOf(coord) == -1 && this.flags.length < this.mines.length) {
-                    this.flags.push(coord);
-                } else {
-                    this.flags.splice(this.flags.indexOf(coord), 1);
+                for (let x = 0; x < this.matrix.length; x++) {
+                    const row = this.matrix[x];
+                    for (let c = 0; c < row.length; c++) {
+                        const color = this.matrix[x][c];
+                        if (color > 0) {
+                            let startpos = this.getCellPosition(c + 1, x + 1);
+                            let neib = this.getNeighborhoods(startpos);
+                            // console.log(neib);
+                            neib.map(cell => {
+                                if (allow.indexOf(cell.pos) > -1 && cell['color'] == color) { //same color
+                                    // console.log(color, pos, cell['coord']);
+                                    //first check if line already stated
+                                    let continues = false;
+                                    starts.map((line, i) => {
+                                        // console.log('checking line ' + startpos, cell.coord, cell.pos, line.direction, line.balls)
+                                        if (cell.pos == line.direction && line.balls.indexOf(startpos) > -1) {
+                                            continues = true;
+                                            starts[i].balls.push(cell.coord);
+                                        }
+                                    });
+                                    if (!continues) {
+                                        // console.log('creating start for line ', [startpos, cell.coord])
+                                        starts.push({
+                                            start: startpos,
+                                            color: color,
+                                            direction: cell.pos,
+                                            balls: [startpos, cell.coord]
+                                        });
+                                    }
+                                }
+                            });
+
+                        }
+                    }
                 }
+                // console.log(starts);
+                return starts;
             }
         }
     });
+
+    const app = Vue.createApp(App);
+    app.use(ElementPlus);
+    app.mount("#game");
 </script>
 <style>
     #game {
-        /* display: flex; */
+        display: inline-block;
         padding: 30px;
     }
 
     .controls {
-        max-width: 400px;
-
+        min-width: 400px;
+        padding: 40px;
     }
 
     .field {
         margin: 10px;
         display: inline-block;
         position: relative;
+        border: 3px solid rgb(71, 71, 71);
+        box-shadow: 2px 2px 6px black;
     }
 
-    .field .overlay {
-        display: none;
-        position: absolute;
-        width: 100%;
-        top: 0;
-        height: 100%;
-        box-sizing: border-box;
-    }
 
-    .field .overlay.success {
-        border: 3px solid green;
-        display: block;
-        background-color: rgba(164, 201, 160, 0.2);
-
+    .field.onselect .cell {
+        cursor: pointer;
     }
 
     .field.over {
         pointer-events: none;
-    }
-
-    .field.over .overlay {
-        display: block;
         border: 3px solid red;
-        background-color: rgba(224, 133, 133, 0.2);
     }
 
     .row {
         display: flex;
     }
 
+    .next {
+        height: 15px;
+        width: 15px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
     .cell {
-        transition: background-color 0.2s ease;
-        width: 30px;
-        height: 30px;
-        border: 1px solid black;
-        background-color: #CCC;
-        color: #FFF;
+        /* transition: background-color 0.2s ease; */
+        width: 50px;
+        height: 50px;
+        border: 1px solid rgb(71, 71, 71);
+        background-color: #9D9494;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+
+    .cell sub {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        color: #CECECE;
+    }
+
+    .cell .ball:hover {
         cursor: pointer;
     }
 
-    .cell.open:hover,
-    .cell.open {
-        color: #000;
-        background-color: #FFF;
+    .cell .selected.ball {
+        animation: pulse 1.2s infinite;
     }
 
-    .cell:hover {
-        background-color: olive;
-    }
-
-    .cell:before {
+    .ball {
+        height: 35px;
+        width: 35px;
+        border-radius: 50%;
         display: inline-block;
-        text-align: center;
-        width: 30px;
-        line-height: 30px;
     }
 
-    .cell.flag {
-        background-color: rgb(236, 217, 217);
+    .cell .canmove:before {
+        background-color: darksalmon;
+        content: "";
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        top: -17px;
+        position: relative;
+        left: -17px;
     }
 
-    .cell.flag:before {
-        content: "🚩";
+    .c1 {
+        background: radial-gradient(circle, #ddb8b8 1%, #a41111 60%);
     }
 
-    .cell.bomb.boom {
-        background-color: red;
+    .c2 {
+        background: radial-gradient(circle, #8a88dd 1%, #0b0bc6 60%);
     }
 
-    .cell.bomb.open:before {
-        content: "💣";
+    .c3 {
+        background: radial-gradient(circle, #a6d28d 1%, #027702 60%);
     }
 
-    .cell.open.n1:before {
-        content: "1️⃣";
+    .c4 {
+        background: radial-gradient(circle, #777373 1%, black 60%);
     }
 
-    .cell.open.n2:before {
-        content: "2️⃣";
+    .c5 {
+        background: radial-gradient(circle, #f9cd79 1%, #a67400 60%);
     }
 
-    .cell.open.n3:before {
-        content: "3️⃣";
+    .c6 {
+        background: radial-gradient(circle, #ffe78a 1%, #d0c515 60%);
     }
 
-    .cell.open.n4:before {
-        content: "4️⃣";
+    .c7 {
+        background: radial-gradient(circle, #b59a8d 1%, #864c02 60%);
     }
 
-    .cell.open.n5:before {
-        content: "5️⃣";
+    .c8 {
+        background: radial-gradient(circle, #a299a1 1%, #7f1bb0 60%);
     }
 
-    .cell.open.n6:before {
-        content: "6️⃣";
+    .toolbar {
+        display: flex;
+        justify-content: space-around;
     }
 
-    .cell.open.n7:before {
-        content: "7️⃣";
+    .toolbar .nextballs {
+        display: flex;
+        padding: 10px;
+        margin-bottom: 10px;
+        justify-content: center;
+        cursor: pointer;
     }
 
-    .cell.open.n8:before {
-        content: "8️⃣";
+    .toolbar .nextballs .ball {
+        margin: 0 5px;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            /* box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); */
+        }
+
+        50% {
+            transform: scale(1.2);
+            box-shadow: 1 1 0 2px rgba(0, 0, 0, 0.8);
+        }
+
+        100% {
+            transform: scale(1);
+            /* box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); */
+        }
     }
 </style>
 
